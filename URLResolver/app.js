@@ -59,22 +59,32 @@ function checkToken(req,res,next) {
 
 
 /**
-Using this method assure the requester is the valid owner of the file(s),
- make sure to use a fast polygon node, because an out of sync node or slow node will always return false for file(s) ownership
+Using this method to assure the requester is a valid owner of the file(s),
+ make sure to use a fast polygon node, because an out of sync node or slow node will always return false for file checkOwnership() method
  even though the user/wallet already bought it.
 * */
 async function confirmChain(req,file_id) {
    return new Promise((resolve,reject) => {
       //Set in the environment
       if (!QueryBlockChain) {
-         return true;
+         return resolve(true);
       }
       const wallet = req.header("x-wallet-address");
-      const origin = `https://${req.hostname}`;
-      if (whitelistedOrigin.indexOf(origin) !== -1 && wallet === "0x0") {
-         // TEST DOWNLOAD FUNCTION ALWAYS USE 0x0 wallet as the requester;
-         return true;
+      if (req.xhr) {
+         return resolve(true);
       }
+      // let fromWhiteListed = false;
+      // whitelistedOrigin.forEach(wl => {
+      //    const url = new URL(wl);
+      //    if (url.hostname === req.hostname) {
+      //       fromWhiteListed = true;
+      //    }
+      // });
+      // console.log(req.hostname);
+      // //CORS REQUEST FROM A WHITELISTED
+      // if (fromWhiteListed) {
+      //    return resolve(true);
+      // }
       //WEIRD WEB3 behavior
       smartContract.methods.checkOwnership(file_id).call({from: wallet})
           .then(res => {
